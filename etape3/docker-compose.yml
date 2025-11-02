@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  data:
+    image: mariadb:latest
+    container_name: data
+    environment:
+      - MARIADB_RANDOM_ROOT_PASSWORD=yes
+      - MARIADB_DATABASE=tp3
+      - MARIADB_USER=tpuser
+      - MARIADB_PASSWORD=tppass
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - tp3_network   
+
+  script:
+    build: ./php
+    container_name: script
+    volumes:
+      - ./src:/app
+    depends_on:
+      - data
+    networks:
+      - tp3_network
+
+  http:
+    image: nginx:latest
+    container_name: http
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/app
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - script
+    networks:
+      - tp3_network
+
+networks:
+  tp3_network:   
+    driver: bridge
